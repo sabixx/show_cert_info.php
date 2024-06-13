@@ -4,8 +4,23 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 function get_certificate_data($cert_file) {
+    if (!$cert_file) {
+        throw new Exception("Certificate file path is empty.");
+    }
+
     $cert_content = file_get_contents($cert_file);
+    if ($cert_content === false) {
+        throw new Exception("Unable to read certificate file: $cert_file");
+    }
+
     $cert_info = openssl_x509_parse($cert_content);
+    if ($cert_info === false) {
+        throw new Exception("Unable to parse certificate: $cert_file");
+    }
+
+    $valid_from = date_create(date('Y-m-d H:i:s', $cert_info['validFrom_time_t']));
+    $valid_to = date_create(date('Y-m-d H:i:s', $cert_info['validTo_time_t']));
+    $validity_period = date_diff($valid_from, $valid_to);
 
     $data = [
         'Serial Number' => $cert_info['serialNumber'],
@@ -13,6 +28,7 @@ function get_certificate_data($cert_file) {
         'Issuer' => $cert_info['issuer']['CN'],
         'Valid From' => date('Y-m-d H:i:s', $cert_info['validFrom_time_t']),
         'Valid To' => date('Y-m-d H:i:s', $cert_info['validTo_time_t']),
+        'Validity Period' => $validity_period->format('%y years, %m months, %d days'),
         'Signature Algorithm' => $cert_info['signatureTypeSN'],
         'Thumbprint' => strtoupper(sha1($cert_content)),
     ];
@@ -25,16 +41,23 @@ function get_certificate_data($cert_file) {
 }
 
 $cert_file = '/etc/nginx/ssl/push_demo.crt';
-$cert_data = get_certificate_data($cert_file);
+$key_file = '/etc/nginx/ssl/push_demo.key';
+
+try {
+    $cert_data = get_certificate_data($cert_file);
+} catch (Exception $e) {
+    die('Error: ' . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SSL Certificate Information</title>
+    <title>Certificate Information</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600&display=swap');
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Mulish', sans-serif;
             background-color: #f4f4f9;
             color: #333;
             margin: 0;
@@ -71,7 +94,8 @@ $cert_data = get_certificate_data($cert_file);
 </head>
 <body>
     <div class="container">
-        <h1>SSL Certificate Information</h1>
+        <h1>Certificate Information</h1>
+        <p>Certificate File: <?php echo htmlspecialchars($cert_file); ?></p>
         <table>
             <?php foreach ($cert_data as $key => $value): ?>
                 <tr>
