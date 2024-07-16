@@ -41,7 +41,6 @@ function get_certificate_data_from_url($url) {
         'Valid To' => date('Y-m-d H:i:s', $cert_info['validTo_time_t']),
         'Validity Period' => $validity_period->format('%y years, %m months, %d days'),
         'Signature Algorithm' => $cert_info['signatureTypeSN'],
-        'Thumbprint' => strtoupper(sha1($cert_content)),
     ];
 
     if (isset($cert_info['extensions']['subjectAltName'])) {
