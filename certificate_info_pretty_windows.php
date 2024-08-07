@@ -3,30 +3,46 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-function get_certificate_data_from_url($url) {
-    if (!$url) {
-        throw new Exception("URL is empty.");
+function get_certificate_data_from_url($host, $port) {
+    if (!$host) {
+        throw new Exception("Host is empty.");
     }
 
-    // Create a stream context to get the certificate
-    $context = stream_context_create(["ssl" => ["capture_peer_cert" => TRUE]]);
-    $stream = @stream_socket_client("ssl://$url:443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
+    if (!$port) {
+        throw new Exception("Port is not provided.");
+    }
+
+    // Create a stream context to get the certificate, ignoring verification errors
+    $context = stream_context_create([
+        "ssl" => [
+            "capture_peer_cert" => true,
+            "verify_peer" => false,
+            "verify_peer_name" => false,
+            "allow_self_signed" => true,
+        ]
+    ]);
+    $address = "ssl://$host:$port";
+    $stream = @stream_socket_client($address, $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
 
     if (!$stream) {
-        throw new Exception("Unable to connect to URL: $url. Error: $errstr");
+        throw new Exception("Unable to connect to $address. Error: $errstr ($errno)");
     }
 
     $params = stream_context_get_params($stream);
+    if (!isset($params['options']['ssl']['peer_certificate'])) {
+        throw new Exception("No peer certificate found for $address");
+    }
+
     $cert_resource = $params['options']['ssl']['peer_certificate'];
     $cert_content = openssl_x509_export($cert_resource, $cert_content) ? $cert_content : false;
 
     if ($cert_content === false) {
-        throw new Exception("Unable to export certificate from URL: $url");
+        throw new Exception("Unable to export certificate from $address");
     }
 
     $cert_info = openssl_x509_parse($cert_content);
     if ($cert_info === false) {
-        throw new Exception("Unable to parse certificate from URL: $url");
+        throw new Exception("Unable to parse certificate from $address");
     }
 
     $valid_from = date_create(date('Y-m-d H:i:s', $cert_info['validFrom_time_t']));
@@ -50,10 +66,11 @@ function get_certificate_data_from_url($url) {
     return $data;
 }
 
-$url = $_SERVER['HTTP_HOST'];
+$host = $_SERVER['SERVER_NAME'];
+$port = $_SERVER['SERVER_PORT']; // Dynamically get the port from the server variables
 
 try {
-    $cert_data = get_certificate_data_from_url($url);
+    $cert_data = get_certificate_data_from_url($host, $port);
 } catch (Exception $e) {
     die('Error: ' . $e->getMessage());
 }
@@ -81,7 +98,7 @@ try {
         }
         h1 {
             text-align: center;
-            color: #444;
+            color: #444.
         }
         table {
             width: 100%;
@@ -97,14 +114,14 @@ try {
             background-color: #f8f8f8;
         }
         tr:hover {
-            background-color: #f1f1f1;
+            background-color: #f1f1f1.
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Certificate Information</h1>
-        <p>URL: <?php echo htmlspecialchars($url); ?></p>
+        <p>Host: <?php echo htmlspecialchars($host); ?>:<?php echo htmlspecialchars($port); ?></p>
         <table>
             <?php foreach ($cert_data as $key => $value): ?>
                 <tr>
