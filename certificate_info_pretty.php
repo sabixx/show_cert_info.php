@@ -3,6 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Function to get the certificate data
 function get_certificate_data($cert_file) {
     if (!$cert_file) {
         throw new Exception("Certificate file path is empty.");
@@ -30,7 +31,6 @@ function get_certificate_data($cert_file) {
         'Valid To' => date('Y-m-d H:i:s', $cert_info['validTo_time_t']),
         'Validity Period' => $validity_period->format('%y years, %m months, %d days'),
         'Signature Algorithm' => $cert_info['signatureTypeSN'],
-        'Thumbprint' => strtoupper(sha1($cert_content)),
     ];
 
     if (isset($cert_info['extensions']['subjectAltName'])) {
@@ -40,8 +40,11 @@ function get_certificate_data($cert_file) {
     return $data;
 }
 
+// Dynamically get the port from the server
+$port = $_SERVER['SERVER_PORT'];
+
+// Construct the certificate path based on the port number
 $cert_file = '/etc/nginx/ssl/push_demo.crt';
-$key_file = '/etc/nginx/ssl/push_demo.key';
 
 try {
     $cert_data = get_certificate_data($cert_file);
@@ -62,6 +65,7 @@ try {
             color: #333;
             margin: 0;
             padding: 0;
+            position: relative;
         }
         .container {
             width: 80%;
@@ -69,6 +73,7 @@ try {
             background: #fff;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
         h1 {
             text-align: center;
@@ -90,10 +95,38 @@ try {
         tr:hover {
             background-color: #f1f1f1;
         }
+        .logo {
+            position: absolute;
+            max-width: 225px;
+            max-height: 225px;
+        }
+        .logo.top-left {
+            top: 10px;
+            left: 10px;
+        }
+        .logo.top-right {
+            top: 10px;
+            right: 10px;
+        }
+        .logo.bottom-left {
+            bottom: 10px;
+            left: 10px;
+        }
+        .logo.bottom-right {
+            bottom: 10px;
+            right: 10px;
+        }
+        .c-text {
+            color: #ffffff; 
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="Venafi_CYBR_logo_R.svg" alt="Venafi CYBR Logo" class="logo top-right">
         <h1>Certificate Information</h1>
         <p>Certificate File: <?php echo htmlspecialchars($cert_file); ?></p>
         <table>
@@ -105,5 +138,6 @@ try {
             <?php endforeach; ?>
         </table>
     </div>
+    <div class="c-text">(C) 2024 CyberArk jens.sabitzer@cyberark.com</div>
 </body>
 </html>
