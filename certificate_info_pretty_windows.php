@@ -1,4 +1,4 @@
-<?php
+ <?php
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -88,6 +88,7 @@ try {
             color: #333;
             margin: 0;
             padding: 0;
+            position: relative;
         }
         .container {
             width: 80%;
@@ -95,10 +96,11 @@ try {
             background: #fff;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
         h1 {
             text-align: center;
-            color: #444.
+            color: #444;
         }
         table {
             width: 100%;
@@ -114,12 +116,40 @@ try {
             background-color: #f8f8f8;
         }
         tr:hover {
-            background-color: #f1f1f1.
+            background-color: #f1f1f1;
+        }
+        .logo {
+            position: absolute;
+            max-width: 225px;
+            max-height: 225px;
+        }
+        .logo.top-left {
+            top: 10px;
+            left: 10px;
+        }
+        .logo.top-right {
+            top: 10px;
+            right: 10px;
+        }
+        .logo.bottom-left {
+            bottom: 10px;
+            left: 10px;
+        }
+        .logo.bottom-right {
+            bottom: 10px;
+            right: 10px;
+        }
+        .c-text {
+            color: #ffffff; 
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="Venafi_CYBR_logo_R.svg" alt="Venafi CYBR Logo" class="logo top-right">
         <h1>Certificate Information</h1>
         <p>Host: <?php echo htmlspecialchars($host); ?>:<?php echo htmlspecialchars($port); ?></p>
         <table>
@@ -131,5 +161,7 @@ try {
             <?php endforeach; ?>
         </table>
     </div>
+    <div class="c-text">(C) 2024 CyberArk jens.sabitzer@cyberark.com</div>
 </body>
 </html>
+ 
